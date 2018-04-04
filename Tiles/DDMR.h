@@ -1,0 +1,1 @@
+#define DDMRSpriteBase 256
