@@ -3,11 +3,15 @@
 #include "mrrobot.h"
 #include "Tiles/DDMRSprites.c"
 
+#define true 0
+#define false 1
+
 void DontDieMrRobot(void)
 {
 	u8 iLoop;
 	u8 iFrame;
 	u8 iBlank;
+	bool bGameOver;
 	SPRITE SpriteList[16];
 
 	// Just create a sprite for now...
@@ -39,7 +43,9 @@ void DontDieMrRobot(void)
 	iFrame=0;
 	iBlank=VBCounter;
 
-	while(1)
+	bGameOver=false;
+
+	while(!bGameOver)
 	{
 		// A basic frame counter...
 		iFrame++;
@@ -50,20 +56,7 @@ void DontDieMrRobot(void)
 			iBlank=VBCounter;
 		}
 
-		for (iLoop=0;iLoop<=15;iLoop++)
-		{
-			CopyAnimationFrame(DDMRSprites, SpriteList[iLoop].BaseTile, SpriteList[iLoop].SpriteType, 4, SpriteList[iLoop].Frame);
-			SetSpritePosition(SpriteList[iLoop].SpriteID, (u8)(SpriteList[iLoop].xPosition>>8), (u8)(SpriteList[iLoop].yPosition>>8));
-			if (SpriteList[iLoop].Direction & 1)
-				SpriteList[iLoop].xPosition+=32;
-			if (SpriteList[iLoop].Direction & 2)
-				SpriteList[iLoop].yPosition+=32;
-			if (SpriteList[iLoop].Direction & 4)
-				SpriteList[iLoop].xPosition-=32;
-			if (SpriteList[iLoop].Direction & 8)
-				SpriteList[iLoop].yPosition-=32;
-		}
-
+		// Get player input
 		if (JOYPAD & J_DOWN)
 			SpriteList[0].yPosition+=64;
 		if (JOYPAD & J_UP)
@@ -72,6 +65,34 @@ void DontDieMrRobot(void)
 			SpriteList[0].xPosition+=64;
 		if (JOYPAD & J_LEFT)
 			SpriteList[0].xPosition-=64;
+
+		for (iLoop=0;iLoop<=15;iLoop++)
+		{
+			// Apply any automated movement to the sprite
+			if (SpriteList[iLoop].Direction & 1)
+				SpriteList[iLoop].xPosition+=32;
+			if (SpriteList[iLoop].Direction & 2)
+				SpriteList[iLoop].yPosition+=32;
+			if (SpriteList[iLoop].Direction & 4)
+				SpriteList[iLoop].xPosition-=32;
+			if (SpriteList[iLoop].Direction & 8)
+				SpriteList[iLoop].yPosition-=32;
+
+			//Check for collision (NOT for sprite zero, the player)
+			if (iLoop>0)
+			{
+				if (SpriteList[iLoop].xPosition==SpriteList[0].xPosition && SpriteList[iLoop].yPosition==SpriteList[0].yPosition)
+				{
+					//Collision has occured
+					//Exact collision, so not exactly useful...
+					bGameOver=true;
+				}
+			}
+
+			// Animate and update position
+			CopyAnimationFrame(DDMRSprites, SpriteList[iLoop].BaseTile, SpriteList[iLoop].SpriteType, 4, SpriteList[iLoop].Frame);
+			SetSpritePosition(SpriteList[iLoop].SpriteID, (u8)(SpriteList[iLoop].xPosition>>8), (u8)(SpriteList[iLoop].yPosition>>8));
+		}
 
 	}
 }
